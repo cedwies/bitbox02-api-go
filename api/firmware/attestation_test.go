@@ -10,7 +10,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"math/big"
 	"testing"
 
 	"github.com/BitBoxSwiss/bitbox02-api-go/api/common"
@@ -44,14 +43,22 @@ func makeCertificate(rootPrivkey *btcec.PrivateKey, bootloaderHash []byte, devic
 	return signature[1:]
 }
 
-// adapted from ecdsa.GenerateKey()
 func p256PrivKeyFromBytes(k []byte) *ecdsa.PrivateKey {
-	priv := new(ecdsa.PrivateKey)
-	c := elliptic.P256()
-	priv.Curve = c
-	priv.D = new(big.Int).SetBytes(k)
-	priv.X, priv.Y = c.ScalarBaseMult(k)
+	priv, err := ecdsa.ParseRawPrivateKey(elliptic.P256(), k)
+	if err != nil {
+		panic(err)
+	}
 	return priv
+}
+
+func p256PubkeyBytes(t *testing.T, priv *ecdsa.PrivateKey) []byte {
+	t.Helper()
+	publicKey, ok := priv.Public().(*ecdsa.PublicKey)
+	require.True(t, ok)
+	encoded, err := publicKey.Bytes()
+	require.NoError(t, err)
+	require.Len(t, encoded, 65)
+	return encoded[1:]
 }
 
 func TestPerformAttestation(t *testing.T) {
@@ -66,10 +73,7 @@ func TestPerformAttestation(t *testing.T) {
 	devicePrivateKey := p256PrivKeyFromBytes(
 		unhex("9b1a4d293a6eef1960d8afab5e58dd581b135152ec3399bde9268fa23051321b"),
 	)
-	devicePublicKey := devicePrivateKey.PublicKey
-	devicePubkeyBytes := make([]byte, 64)
-	copy(devicePubkeyBytes[:32], devicePublicKey.X.Bytes())
-	copy(devicePubkeyBytes[32:], devicePublicKey.Y.Bytes())
+	devicePubkeyBytes := p256PubkeyBytes(t, devicePrivateKey)
 
 	undo := addAttestationPubkey(hex.EncodeToString(rootPublicKey.SerializeUncompressed()))
 	defer undo()
@@ -205,10 +209,7 @@ func TestVerifyAttestation(t *testing.T) {
 	devicePrivateKey := p256PrivKeyFromBytes(
 		unhex("9b1a4d293a6eef1960d8afab5e58dd581b135152ec3399bde9268fa23051321b"),
 	)
-	devicePublicKey := devicePrivateKey.PublicKey
-	devicePubkeyBytes := make([]byte, 64)
-	copy(devicePubkeyBytes[:32], devicePublicKey.X.Bytes())
-	copy(devicePubkeyBytes[32:], devicePublicKey.Y.Bytes())
+	devicePubkeyBytes := p256PubkeyBytes(t, devicePrivateKey)
 	certificate := makeCertificate(rootPrivateKey, bootloaderHash, devicePubkeyBytes)
 
 	undo := addAttestationPubkey(hex.EncodeToString(rootPublicKey.SerializeUncompressed()))
