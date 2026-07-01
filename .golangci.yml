@@ -25,6 +25,7 @@ linters:
     - gocognit
     - gocyclo
     - godox
+    - gomodguard
     - gosec
     - gosmopolitan
     - inamedparam
