@@ -40,8 +40,11 @@ func TestSimulatorBackups(t *testing.T) {
 
 		require.Error(t, device.RestoreBackup(list[0].ID))
 
-		// v9.26.1 C simulator has a regression where the reset call loops forever.
-		if device.Version().String() != "9.26.1" {
+		// v9.26.1 and v9.26.3 C simulators have a regression where the reset call
+		// loops forever.
+		switch device.Version().String() {
+		case "9.26.1", "9.26.3":
+		default:
 			require.NoError(t, device.Reset())
 			require.NoError(t, device.RestoreBackup(list[0].ID))
 			id, err = device.CheckBackup(true)
