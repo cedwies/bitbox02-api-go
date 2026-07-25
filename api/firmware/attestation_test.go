@@ -36,10 +36,7 @@ func makeCertificate(rootPrivkey *btcec.PrivateKey, bootloaderHash []byte, devic
 	certMsg.Write(bootloaderHash)
 	certMsg.Write(devicePubkey)
 	sigHash := sha256.Sum256(certMsg.Bytes())
-	signature, err := btcec_ecdsa.SignCompact(rootPrivkey, sigHash[:], true)
-	if err != nil {
-		panic(err)
-	}
+	signature := btcec_ecdsa.SignCompact(rootPrivkey, sigHash[:], true)
 	return signature[1:]
 }
 

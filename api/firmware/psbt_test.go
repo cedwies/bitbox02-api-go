@@ -1025,8 +1025,7 @@ func TestSimulatorBTCPSBTPaymentRequest(t *testing.T) {
 		require.NoError(t, err)
 		privKey, _ := btcec.PrivKeyFromBytes([]byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"))
 		require.NoError(t, err)
-		signature, err := ecdsa.SignCompact(privKey, sighash, true)
-		require.NoError(t, err)
+		signature := ecdsa.SignCompact(privKey, sighash, true)
 		paymentRequest.Signature = signature[1:]
 
 		// Previous transaction with one output.
