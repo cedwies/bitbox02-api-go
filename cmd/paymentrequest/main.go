@@ -110,8 +110,7 @@ func main() {
 	errpanic(err)
 	privKey, _ := btcec.PrivKeyFromBytes([]byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"))
 	errpanic(err)
-	signature, err := ecdsa.SignCompact(privKey, sighash, true)
-	errpanic(err)
+	signature := ecdsa.SignCompact(privKey, sighash, true)
 	paymentRequest.Signature = signature[1:]
 
 	_, err = device.BTCSign(
